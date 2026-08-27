@@ -38,7 +38,7 @@ public static class SeedData
                 Surname = "Ilić",
                 EmailConfirmed = true
             };
-            await userManager.CreateAsync(vet2, "Ana123!");
+            await userManager.CreateAsync(vet2, "Ana12345!");
             await userManager.AddToRoleAsync(vet2, "Veterinar");
         }
 

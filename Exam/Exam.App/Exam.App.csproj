@@ -24,9 +24,4 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Domain\Repositories\" />
-    <Folder Include="Infrastructure\Database\Repositories\" />
-  </ItemGroup>
-
 </Project>

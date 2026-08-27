@@ -4,6 +4,8 @@ using Exam.App.Infrastructure.Database;
 using Exam.App.Services;
 using Exam.App.Services.Mappers;
 using Microsoft.EntityFrameworkCore;
+using Exam.App.Domain.Repositories;
+using Exam.App.Infrastructure.Database.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Service and Repository Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
-
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+builder.Services.AddScoped<IPatientService, PatientService>();
 
 
 
