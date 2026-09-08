@@ -34,6 +34,13 @@ namespace Exam.App.Services.Mappers
                 .ForMember(dest => dest.AnimalSpeciesName, opt => opt.MapFrom(src => src.AnimalSpecies.Name))
                 .ForMember(dest => dest.OwnerFullName, opt => opt.MapFrom(src => src.Owner.Name + " " + src.Owner.Surname))
                 .ForMember(dest => dest.VetFullName, opt => opt.MapFrom(src => src.Vet.Name + " " + src.Vet.Surname));
+
+            // ApplicationUser -> VetDto: za dropdown listu veterinara (GET /api/Patients/vets).
+            CreateMap<ApplicationUser, VetDto>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Name + " " + src.Surname));
+
+            // AnimalSpecies -> AnimalSpeciesDto: za dropdown listu vrsta (GET /api/Patients/species).
+            CreateMap<AnimalSpecies, AnimalSpeciesDto>();
         }
     }
 }

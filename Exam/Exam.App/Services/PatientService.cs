@@ -20,9 +20,9 @@ namespace Exam.App.Services
             _mapper = mapper;
         }
 
-        public async Task <List<ShowPatientDto>> GetAllAsync ()
+        public async Task <List<ShowPatientDto>> GetAllAsync(string? vetId, string? name, int? animalSpeciesId, int? ageFrom, int? ageTo) 
         {
-            var patients = await _patientRepository.GetAllAsync();
+            var patients = await _patientRepository.GetAllAsync(vetId, name, animalSpeciesId, ageFrom, ageTo);
             return patients.Select(p=> _mapper.Map<ShowPatientDto>(p)).ToList();
         }
 
@@ -82,5 +82,20 @@ namespace Exam.App.Services
             if(!deleted)
                 throw new NotFoundException(id);
         }
+
+        public async Task <List<VetDto>> GetVetsAsync ()
+        {
+            var vets = await _userManager.GetUsersInRoleAsync("Veterinar");
+            return vets
+                .Select (v=> _mapper.Map<VetDto>(v))
+                .ToList();
+        }
+
+        public async Task <List<AnimalSpeciesDto>> GetSpeciesAsync()
+        {
+            var species = await _patientRepository.GetAllSpeciesAsync();
+            return species.Select(s => _mapper.Map<AnimalSpeciesDto>(s)).ToList(); ;
+        }
+
     }
 }

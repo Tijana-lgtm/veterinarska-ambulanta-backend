@@ -19,9 +19,14 @@ namespace Exam.App.Controllers
         }
 
         [HttpGet]
-        public async Task <IActionResult> GetAll()
+        public async Task <IActionResult> GetAll(
+            [FromQuery] string? vetId,
+            [FromQuery] string? name,
+            [FromQuery] int? animalSpeciesId,
+            [FromQuery] int? ageFrom,
+            [FromQuery] int? ageTo)
         {
-            return Ok (await _patientService.GetAllAsync());
+            return Ok (await _patientService.GetAllAsync(vetId, name, animalSpeciesId, ageFrom, ageTo));
         }
 
         [HttpGet("{id}")]
@@ -59,5 +64,18 @@ namespace Exam.App.Controllers
             await _patientService.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("vets")]
+        public async Task<IActionResult> GetVets()
+        {
+            return Ok(await _patientService.GetVetsAsync());
+        }
+
+        [HttpGet("species")]
+        public async Task<IActionResult> GetSpecies()
+        {
+            return Ok(await _patientService.GetSpeciesAsync());
+        }
+
     }
 }
