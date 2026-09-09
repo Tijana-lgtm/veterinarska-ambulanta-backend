@@ -143,6 +143,33 @@ namespace Exam.App.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Exam.App.Domain.Appointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VetId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("VetId");
+
+                    b.ToTable("Appointments");
+                });
+
             modelBuilder.Entity("Exam.App.Domain.Patient", b =>
                 {
                     b.Property<int>("Id")
@@ -330,6 +357,25 @@ namespace Exam.App.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Exam.App.Domain.Appointment", b =>
+                {
+                    b.HasOne("Exam.App.Domain.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Exam.App.Domain.ApplicationUser", "Vet")
+                        .WithMany()
+                        .HasForeignKey("VetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("Vet");
                 });
 
             modelBuilder.Entity("Exam.App.Domain.Patient", b =>

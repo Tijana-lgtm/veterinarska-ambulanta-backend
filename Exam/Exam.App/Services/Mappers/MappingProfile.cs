@@ -2,6 +2,7 @@
 using Exam.App.Domain;
 using Exam.App.Services.Dtos;
 using Exam.App.Services.Dtos.Patients;
+using Exam.App.Services.Dtos.Appointments;
 
 namespace Exam.App.Services.Mappers
 {
@@ -41,6 +42,24 @@ namespace Exam.App.Services.Mappers
 
             // AnimalSpecies -> AnimalSpeciesDto: za dropdown listu vrsta (GET /api/Patients/species).
             CreateMap<AnimalSpecies, AnimalSpeciesDto>();
+
+            // Appointment -> ShowAppointmentDto: podaci o pacijentu i veterinaru za listu pregleda.
+            CreateMap<Appointment, ShowAppointmentDto>()
+                .ForMember(dest => dest.PatientName, opt => opt.MapFrom(src => src.Patient.Name))
+                .ForMember(dest => dest.AnimalSpeciesName, opt => opt.MapFrom(src => src.Patient.AnimalSpecies.Name))
+                .ForMember(dest => dest.PatientAge, opt => opt.MapFrom(src => CalculateAge(src.Patient.DateOfBirth)))
+                .ForMember(dest => dest.VetFullName, opt => opt.MapFrom(src => src.Vet.Name + " " + src.Vet.Surname));
+        }
+
+        // Racuna starost (u godinama) na osnovu datuma rodjenja - koristi se za ShowAppointmentDto.PatientAge.
+        private static int CalculateAge(DateOnly dateOfBirth)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var age = today.Year - dateOfBirth.Year;
+            if (dateOfBirth > today.AddYears(-age))
+                age--;
+
+            return age;
         }
     }
 }
