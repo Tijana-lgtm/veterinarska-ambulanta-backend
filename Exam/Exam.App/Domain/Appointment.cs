@@ -14,6 +14,13 @@
         public required string VetId { get; set; }
         public ApplicationUser Vet { get; set; } = null!;
 
-
+        // Otkazivanje (3.2) - pregled se ne brise, ostaje vidljiv ali zasivljen,
+        // i ne racuna se u proveru dostupnosti veterinara (2.3).
+        public bool IsCancelled { get; set; }
+        public string? CancellationReason { get; set; }
+    
+        public double? Weight { get; set; }
+        public string? Anamnesis { get; set; }
+        public DateTime? ReportCreatedAt { get; set; }
     }
 }

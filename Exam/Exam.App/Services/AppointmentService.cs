@@ -30,6 +30,46 @@ namespace Exam.App.Services
             return appointments.Select (a=> _mapper.Map<ShowAppointmentDto>(a)).ToList();
         }
 
+        public async Task <List<ShowAppointmentDto>> GetMyAppointmentsAsync(string username)
+        {
+            var vet = await _userManager.FindByNameAsync(username);
+            if (vet == null)
+                throw new BadRequestException("Korisnik ne postoji.");
+
+            var appointments = await _appointmentRepository.GetByVetAsync(vet.Id);
+            var result = new List <ShowAppointmentDto>();
+
+            foreach (var appointment in appointments)
+            {
+                var dto = _mapper.Map<ShowAppointmentDto>(appointment);
+                dto.CanEditReport = CanEditReport(appointment);
+                result.Add(dto);
+            }
+            return result;
+        }
+
+        public async Task<ShowAppointmentDto> CancelAsync(int id, string username, CancelAppointmentDto dto)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null)
+                throw new NotFoundException(id);
+
+            var currentUser = await _userManager.FindByNameAsync(username);
+            if (currentUser == null || appointment.VetId != currentUser.Id)
+                throw new BadRequestException("Mozete otkazati samo svoje zakazane preglede.");
+
+            if (appointment.IsCancelled)
+                throw new BadRequestException("Pregled je vec otkazan.");
+
+            appointment.IsCancelled = true;
+            appointment.CancellationReason = dto.Reason;
+
+            await _appointmentRepository.UpdateAsync(appointment);
+
+            var fullyLoaded = await _appointmentRepository.GetByIdAsync(id);
+            return _mapper.Map<ShowAppointmentDto>(fullyLoaded!);
+        }
+
         public async Task <ShowAppointmentDto> CreateAsync (CreateAppointmentDto dto)
         {
             var startTime = DateTime.SpecifyKind(dto.StartTime, DateTimeKind.Utc);
@@ -60,6 +100,92 @@ namespace Exam.App.Services
 
             var fullyLoaded = await _appointmentRepository.GetByIdAsync(created.Id);
             return _mapper.Map<ShowAppointmentDto>(fullyLoaded!);
+        }
+
+        // Podnosenje izvestaja (3.3) - samo dodeljeni veterinar, samo jednom, ne za otkazan pregled.
+        public async Task<ShowAppointmentDto> SubmitReportAsync(int id, string username, ReportDto dto)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null)
+                throw new NotFoundException(id);
+
+            var currentUser = await _userManager.FindByNameAsync(username);
+            if (currentUser == null || appointment.VetId != currentUser.Id)
+                throw new BadRequestException("Mozete podneti izvestaj samo za svoje zakazane preglede.");
+
+            if (appointment.IsCancelled)
+                throw new BadRequestException("Ne mozete podneti izvestaj za otkazan pregled.");
+
+            if (appointment.ReportCreatedAt != null)
+                throw new BadRequestException("Izvestaj je vec podnet za ovaj pregled.");
+
+            appointment.Weight = dto.Weight;
+            appointment.Anamnesis = dto.Anamnesis;
+            appointment.ReportCreatedAt = DateTime.UtcNow;
+
+            await _appointmentRepository.UpdateAsync(appointment);
+
+            var fullyLoaded = await _appointmentRepository.GetByIdAsync(id);
+            var resultDto = _mapper.Map<ShowAppointmentDto>(fullyLoaded!);
+            resultDto.CanEditReport = CanEditReport(fullyLoaded!);
+            return resultDto;
+        }
+
+        // Izmena vec podnetog izvestaja (3.3) - dozvoljeno samo unutar roka od 3 radna dana.
+        public async Task<ShowAppointmentDto> UpdateReportAsync(int id, string username, ReportDto dto)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null)
+                throw new NotFoundException(id);
+
+            var currentUser = await _userManager.FindByNameAsync(username);
+            if (currentUser == null || appointment.VetId != currentUser.Id)
+                throw new BadRequestException("Mozete izmeniti izvestaj samo za svoje zakazane preglede.");
+
+            if (appointment.ReportCreatedAt == null)
+                throw new BadRequestException("Izvestaj jos nije podnet za ovaj pregled.");
+
+            if (!CanEditReport(appointment))
+                throw new BadRequestException("Rok za izmenu izvestaja je istekao.");
+
+            appointment.Weight = dto.Weight;
+            appointment.Anamnesis = dto.Anamnesis;
+            // ReportCreatedAt se NE menja - rok se i dalje racuna od originalnog podnosenja.
+
+            await _appointmentRepository.UpdateAsync(appointment);
+
+            var fullyLoaded = await _appointmentRepository.GetByIdAsync(id);
+            var resultDto = _mapper.Map<ShowAppointmentDto>(fullyLoaded!);
+            resultDto.CanEditReport = CanEditReport(fullyLoaded!);
+            return resultDto;
+        }
+        private static bool CanEditReport (Appointment appointment)
+        {
+            if (appointment.ReportCreatedAt == null)
+                return false;
+
+            var reportDate = DateOnly.FromDateTime(appointment.ReportCreatedAt.Value);
+            var deadline = AddBusinessDays(reportDate, 2);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            return today <= deadline;
+        }
+
+        private static DateOnly AddBusinessDays (DateOnly startDate, int businessDaysToAdd)
+        {
+            var date = startDate;
+            var addedDays = 0;
+
+            while (addedDays< businessDaysToAdd)
+            {
+                date = date.AddDays(1);
+
+                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    addedDays = addedDays + 1;
+                }
+            }
+            return date;
         }
     }
 }

@@ -44,13 +44,14 @@ namespace Exam.App.Services.Mappers
             CreateMap<AnimalSpecies, AnimalSpeciesDto>();
 
             // Appointment -> ShowAppointmentDto: podaci o pacijentu i veterinaru za listu pregleda.
+            // CanEditReport se NE mapira ovde (zavisi od "danasnjeg dana") - postavlja ga servis posle mapiranja.
             CreateMap<Appointment, ShowAppointmentDto>()
                 .ForMember(dest => dest.PatientName, opt => opt.MapFrom(src => src.Patient.Name))
                 .ForMember(dest => dest.AnimalSpeciesName, opt => opt.MapFrom(src => src.Patient.AnimalSpecies.Name))
                 .ForMember(dest => dest.PatientAge, opt => opt.MapFrom(src => CalculateAge(src.Patient.DateOfBirth)))
-                .ForMember(dest => dest.VetFullName, opt => opt.MapFrom(src => src.Vet.Name + " " + src.Vet.Surname));
+                .ForMember(dest => dest.VetFullName, opt => opt.MapFrom(src => src.Vet.Name + " " + src.Vet.Surname))
+                .ForMember(dest => dest.HasReport, opt => opt.MapFrom(src => src.ReportCreatedAt != null));
         }
-
         // Racuna starost (u godinama) na osnovu datuma rodjenja - koristi se za ShowAppointmentDto.PatientAge.
         private static int CalculateAge(DateOnly dateOfBirth)
         {

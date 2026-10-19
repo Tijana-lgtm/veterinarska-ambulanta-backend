@@ -151,8 +151,20 @@ namespace Exam.App.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Anamnesis")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ReportCreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp with time zone");
@@ -160,6 +172,9 @@ namespace Exam.App.Migrations
                     b.Property<string>("VetId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<double?>("Weight")
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
